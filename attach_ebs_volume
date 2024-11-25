@@ -1,0 +1,37 @@
+provider "aws" {
+
+region = "ap-south-1"
+profile = "default"
+#access_key = "AKIAQLSIVNPWS****0"
+#secret_key = "ClgC+tdicCRNX5GavUb9za0ZxTQMrcqp******e"
+
+}
+resource "aws_instance" "OS" {
+  ami           = "ami-0aebec83a182ea7ea" 
+  instance_type = "t2.micro" 
+  tags = {
+   Name = "First os2"
+   }
+}
+output "First_os" {
+  value = aws_instance.OS
+  }
+
+resource "aws_ebs_volume" "st1" {
+  availability_zone = aws_instance.OS.availability_zone
+  size = 10 
+  tags = {
+   Name = "new volume"
+   }
+
+  
+ }
+
+resource "aws_volume_attachment" "ebsatt" {
+  device_name = "/dev/sdh"
+  volume_id = aws_ebs_volume.st1.id
+  instance_id = aws_instance.OS.id
+  
+}  
+
+
