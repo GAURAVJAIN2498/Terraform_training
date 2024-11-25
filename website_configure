@@ -1,0 +1,92 @@
+provider "aws" {
+
+region = "ap-south-1"
+profile = "default"
+
+}
+resource "aws_instance" "webos" {
+  ami           = "ami-0aebec83a182ea7ea"
+  instance_type = "t2.micro"
+  security_groups = [ "website-allow" ]
+  key_name = "terraform_key"
+
+  tags = {
+   Name = "webserver os tf  "
+   }
+}
+
+resource "null_resource" "nullremote1" {
+
+connection {
+  type = "ssh"
+  user = "ec2-user"
+  private_key = file("C:/Users/pc/OneDrive/Downloads/terraform_key (1).pem")
+  host = aws_instance.webos.public_ip
+}
+
+provisioner "remote-exec" { 
+  inline = [
+    "sudo yum install httpd -y",
+    "sudo yum install php -y",
+    "sudo systemctl start httpd",
+    "sudo systemctl enable httpd",
+  ]
+ }
+}
+
+resource "aws_ebs_volume" "example" {
+  availability_zone = aws_instance.webos.availability_zone
+  size = 1
+ }
+
+resource "aws_volume_attachment" "ebs_att" {
+  device_name = "/dev/sdc"
+  volume_id = aws_ebs_volume.example.id
+  instance_id = aws_instance.webos.id
+}  
+
+resource "null_resource" "nullremote2" {
+
+connection {
+  type = "ssh"
+  user = "ec2-user"
+  private_key = file("C:/Users/pc/OneDrive/Downloads/terraform_key (1).pem")
+  host = aws_instance.webos.public_ip
+}
+
+provisioner "remote-exec" { 
+  inline = [
+    "sudo mkfs.ext4 /dev/xvdc  ",
+    "sudo mount /dev/xvdc /var/www/html"
+  ]
+ }
+}
+
+resource "null_resource" "nullremote3" {
+
+connection {
+  type = "ssh"
+  user = "ec2-user"
+  private_key = file("C:/Users/pc/OneDrive/Downloads/terraform_key (1).pem")
+  host = aws_instance.webos.public_ip
+}
+
+provisioner "remote-exec" { 
+  inline = [
+    "sudo yum install git -y",
+    "sudo git clone https://github.com/GAURAVJAIN2498/gittraining.git /var/www/html",  
+  ]
+ }
+}
+
+resource "null_resource" "execute_command" {
+  depends_on = [aws_instance.webos]
+
+  provisioner "local-exec" {
+    command = "chrome http://${aws_instance.webos.public_ip}/index.php "
+  }
+}
+
+
+
+
