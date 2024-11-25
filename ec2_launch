@@ -1,0 +1,13 @@
+provider "aws" {
+
+region = "ap-south-1"
+profile = "default"
+
+}
+resource "aws_instance" "OS" {
+  ami           = "ami-0aebec83a182ea7ea" 
+  instance_type = "t2.micro"
+  tags = {
+   Name = "First os"
+   }
+ }
